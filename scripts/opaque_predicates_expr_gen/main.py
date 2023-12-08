@@ -95,8 +95,8 @@ def generate_all(num: int = 3) -> None:
         for i in range(len(combination)):
             cur = lambdas[i](cur)
 
-        for i in range(len(vals)):
-            s.add(vals[i] > 0, vals[i] <= (sz//2))
+        for val_ in vals:
+            s.add(val_ > 0, val_ <= sz//2)
 
         x1, x2 = BitVecs('x1 x2', sz)
         s.add(x1 != x2)
@@ -119,10 +119,7 @@ def generate_all(num: int = 3) -> None:
                 break
 
             m = s.model()
-            evaluated_vals = []
-            for val in vals:
-                evaluated_vals.append(m[val].as_long())
-
+            evaluated_vals = [m[val].as_long() for val in vals]
             x3, x4 = BitVecs('x3 x4', sz)
             v = cur
 
@@ -137,7 +134,7 @@ def generate_all(num: int = 3) -> None:
             if s.check(expr3 != expr4) != sat:
                 sssttrrr = 'x'
                 for i in range(len(vals)):
-                    sssttrrr = strs[i].format(lhs='(' + sssttrrr, rhs=str(evaluated_vals[i])) + ')'
+                    sssttrrr = f"{strs[i].format(lhs=f'({sssttrrr}', rhs=str(evaluated_vals[i]))})"
 
                 vv = m.eval(expr3)
                 try:
@@ -147,7 +144,7 @@ def generate_all(num: int = 3) -> None:
                         f.write(f'{sssttrrr} == {vv}\n')
                     break  # weird
 
-                sssttrrr += ' == ' + str(result)
+                sssttrrr += f' == {str(result)}'
 
                 try:
                     ev_check = eval(sssttrrr.replace('x', f'uint{sz}(-1)'))
@@ -164,7 +161,7 @@ def generate_all(num: int = 3) -> None:
                     with open('./generated.txt', 'a+') as f:
                         f.write(sssttrrr + '\n')
                     with open('./zasm_generated.cpp', 'a+') as f:
-                        f.write('// ' + sssttrrr + '\n')
+                        f.write(f'// {sssttrrr}' + '\n')
                         for i in range(len(vals)):
                             f.write(zstrs[i].format(rhs=str(evaluated_vals[i])) + '\n')
                         f.write(f'as->cmp(x, zasm::Imm({result}))\n')
